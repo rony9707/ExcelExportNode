@@ -36,7 +36,7 @@ app.post('/download-excel', async (req, res) => {
 
     worker.on('error', (error) => {
         console.error('Worker error:', error);
-        res.status(500).send('Error generating Excel file');
+        res.status(500).send(error);
     });
 
     worker.on('exit', (code) => {
