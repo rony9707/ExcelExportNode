@@ -2,10 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { Worker } = require('worker_threads');
+
 const app = express();
 const port = 3000;
 
-
+app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 
 app.post('/download-excel', async (req, res) => {
