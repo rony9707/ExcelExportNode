@@ -6,9 +6,7 @@ const app = express();
 const port = 3000;
 
 
-app.use(cors({ origin: '*' })); // Allow all origins
 app.use(bodyParser.json({ limit: '10mb' }));
-
 
 app.post('/download-excel', async (req, res) => {
     const { data, config } = req.body;
