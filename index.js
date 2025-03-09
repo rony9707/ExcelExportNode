@@ -93,6 +93,7 @@ async function generateExcelBuffer(data, config) {
     return await workbook.xlsx.writeBuffer();
 }
 
+
 /**
  * Prepares column headers from config.
  * @param {Array} config
@@ -135,19 +136,65 @@ function styleHeaderRow(worksheet) {
 
 
 /**
- * Adds data rows to the worksheet.
+ * Adds data rows to the worksheet and appends subtotal for summable columns.
  * @param {ExcelJS.Worksheet} worksheet
  * @param {Array} data
  * @param {Array} config
  */
 function addDataRows(worksheet, data, config) {
-    data.forEach(row => {
-        const newRow = {};
-        config.forEach(col => {
-            newRow[col.key] = row[col.key];
-        });
-        worksheet.addRow(newRow);
-    });
+  let lastRowNumber = 1; // Start from header row index
+
+  data.forEach(row => {
+      const newRow = {};
+      config.forEach(col => {
+          newRow[col.key] = row[col.key];
+      });
+      worksheet.addRow(newRow);
+  });
+
+  lastRowNumber = worksheet.rowCount; // Last data row index
+
+  // Add subtotal row if there are summable columns
+  const subtotalRow = {};
+  config.forEach(col => {
+      if (col.summable) {
+          const columnLetter = getColumnLetter(worksheet, col.key);
+          subtotalRow[col.key] = { formula: `SUBTOTAL(9, ${columnLetter}2:${columnLetter}${lastRowNumber})` };
+      } else {
+          subtotalRow[col.key] = '';
+      }
+  });
+
+  const subtotalExcelRow = worksheet.addRow(subtotalRow);
+  styleSubtotalRow(subtotalExcelRow);
+}
+
+/**
+ * Retrieves the column letter based on the key in the worksheet.
+ * @param {ExcelJS.Worksheet} worksheet
+ * @param {string} key
+ * @returns {string}
+ */
+function getColumnLetter(worksheet, key) {
+  const columnIndex = worksheet.columns.findIndex(col => col.key === key);
+  return columnIndex >= 0 ? String.fromCharCode(65 + columnIndex) : '';
+}
+
+
+/**
+ * Styles the subtotal row.
+ * @param {ExcelJS.Row} row
+ */
+function styleSubtotalRow(row) {
+  row.eachCell(cell => {
+      cell.font = { bold: true };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFCC00' } // Light yellow color
+      };
+  });
 }
 
 /**
